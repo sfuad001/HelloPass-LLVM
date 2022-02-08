@@ -45,14 +45,14 @@ namespace
       unordered_map<string, int> hashTable;
       for (auto &inst : basic_block)
       {
-        errs() << inst << "\n";
+        // errs() << inst << "\n";
         if (inst.getOpcode() == Instruction::Load)
         {
-          errs() << "This is Load"
-                 << "\n";
+          // errs() << "This is Load"
+          //        << "\n";
 
           string operand1 = inst.getOperand(0)->getName().str();
-          errs() << operand1 << "\n";
+          // errs() << operand1 << "\n";
 
           int resultNum;
 
@@ -82,75 +82,101 @@ namespace
             hashTable.erase(resultKey);
           }
           hashTable.insert(make_pair(value, resultNum));
-          errs() << "value: " << value << "\n";
+          // errs() << "value: " << value << "\n";
+          // result print
           errs() << inst << "\t" << resultNum << " = " << resultNum << "\n";
         }
         if (inst.getOpcode() == Instruction::Store)
         {
-          errs() << "This is Store:"
-                 << "\n";
+          // errs() << "This is Store:"
+          //        << "\n";
           // find operand 1 and 2 from the store instruction
           // insert the operand2 in hashTable if it's not available
           // if available get the value
           // overwrite the operand1 in hashTable
           string operand1 = inst.getOperand(0)->getName().str();
           string operand2 = inst.getOperand(1)->getName().str();
-          auto key2 = hashTable.find(operand2);
-          int operand1Value = 0;
-          if (key2 == hashTable.end())
+          Value *checkVal = inst.getOperand(0);
+          if (llvm::ConstantInt *constInteger = dyn_cast<llvm::ConstantInt>(checkVal))
           {
-            count++;
-            hashTable.insert(make_pair(operand2, count));
-            operand1Value = count;
-            // hashTable.insert(make_pair(operand1, count));
+            // if operand1 is a constant integer than the operand1 is overwritten here by the integer value
+            // errs() << "Found constInt with " << operand2 << ": " << operand1 << constInteger << "\n";
+            if (constInteger->getBitWidth() <= 32)
+            {
+              int constIntegerVal = constInteger->getSExtValue();
+              operand1 = to_string(constIntegerVal);
+              // errs() << "Found constInt with " << operand2 << ": str " << operand1 << " int " << constIntegerVal << "\n";
+            }
+          }
+  
+          // errs() << "value: " << operand1 << "::" << inst.getOperand(0) << "\n";
+          auto key1 = hashTable.find(operand1);
+          int operand2Value = 0;
+          if (key1 == hashTable.end())
+          {
+            // we check if the value address of the operand1 is present in the hash table
+            stringstream ss;
+            ss << inst.getOperand(0);
+            string value1 = ss.str();
+            auto valKey = hashTable.find(value1);
+            if (valKey == hashTable.end())
+            {
+              count++;
+              hashTable.insert(make_pair(operand1, count));
+              operand2Value = count;
+            }
+            else
+            {
+              operand2Value = valKey->second;
+            }
           }
           else
           {
-            operand1Value = key2->second;
+            operand2Value = key1->second;
           }
 
-          auto key1 = hashTable.find(operand1);
-          if (key1 != hashTable.end())
+          auto key2 = hashTable.find(operand2);
+          if (key2 != hashTable.end())
           {
-            hashTable.erase(key1);
+            hashTable.erase(key2);
           }
-          hashTable.insert(make_pair(operand1, operand1Value));
+          hashTable.insert(make_pair(operand2, operand2Value));
 
           // print the instruction with hash table value
-          errs() << inst << "\t" << operand1Value << " = " << operand1Value << "\n";
+          errs() << inst << "\t" << operand2Value << " = " << operand2Value << "\n";
         }
         if (inst.isBinaryOp())
         {
-          errs() << "Op Code:" << inst.getOpcodeName() << "\n";
+          // errs() << "Op Code:" << inst.getOpcodeName() << "\n";
           if (inst.getOpcode() == Instruction::Add)
           {
-            errs() << "This is Addition"
-                   << "\n";
+            // errs() << "This is Addition"
+            //        << "\n";
           }
           if (inst.getOpcode() == Instruction::Sub)
           {
-            errs() << "This is Subtraction"
-                   << "\n";
+            // errs() << "This is Subtraction"
+            //        << "\n";
           }
           if (inst.getOpcode() == Instruction::Load)
           {
-            errs() << "This is Load2"
-                   << "\n";
+            // errs() << "This is Load2"
+            //        << "\n";
           }
           if (inst.getOpcode() == Instruction::UDiv)
           {
-            errs() << "This is Unsigned Division"
-                   << "\n";
+            // errs() << "This is Unsigned Division"
+            //        << "\n";
           }
           if (inst.getOpcode() == Instruction::SDiv)
           {
-            errs() << "This is Signed Division"
-                   << "\n";
+            // errs() << "This is Signed Division"
+            //        << "\n";
           }
           if (inst.getOpcode() == Instruction::Mul)
           {
-            errs() << "This is Multiplication"
-                   << "\n";
+            // errs() << "This is Multiplication"
+            //        << "\n";
           }
 
           // see other classes, Instruction::Sub, Instruction::UDiv, Instruction::SDiv
@@ -187,8 +213,8 @@ namespace
               resultString += to_string(result);
             }
             i++;
-            errs() << "\t" << *(*it) << "\n";
-            errs() << dyn_cast<Value>(it) << "\n";
+            // errs() << "\t" << *(*it) << "\n";
+            // errs() << dyn_cast<Value>(it) << "\n";
             // if ((*it)->hasName())
             // errs() << (*it)->getName() << "\n";
           }
@@ -212,13 +238,16 @@ namespace
           string value = ss.str();
           auto valueKey = hashTable.find(value);
 
-          if (valueKey != hashTable.end()) {
+          if (valueKey != hashTable.end())
+          {
             hashTable.erase(valueKey);
           }
 
           hashTable.insert(make_pair(value, resultStringNum));
 
-          errs () << inst << "\t" << resultStringNum << " = " << resultString << "\n";
+          // result print
+          errs() << inst << "\t" << resultStringNum << " = " << resultString << "\n";
+          // errs() << value << ":: " << resultStringNum << "\n";
 
           // auto *ptr2 = dyn_cast<User>(&inst);
           // for (auto it = ptr->op_begin(); it != ptr->op_end(); ++it)
