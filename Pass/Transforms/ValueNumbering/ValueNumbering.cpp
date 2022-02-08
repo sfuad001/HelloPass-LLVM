@@ -84,7 +84,7 @@ namespace
           hashTable.insert(make_pair(value, resultNum));
           // errs() << "value: " << value << "\n";
           // result print
-          errs() << inst << "\t" << resultNum << " = " << resultNum << "\n";
+          errs() << inst << "\t\t\t" << resultNum << " = " << resultNum << "\n";
         }
         if (inst.getOpcode() == Instruction::Store)
         {
@@ -108,7 +108,7 @@ namespace
               // errs() << "Found constInt with " << operand2 << ": str " << operand1 << " int " << constIntegerVal << "\n";
             }
           }
-  
+
           // errs() << "value: " << operand1 << "::" << inst.getOperand(0) << "\n";
           auto key1 = hashTable.find(operand1);
           int operand2Value = 0;
@@ -143,7 +143,7 @@ namespace
           hashTable.insert(make_pair(operand2, operand2Value));
 
           // print the instruction with hash table value
-          errs() << inst << "\t" << operand2Value << " = " << operand2Value << "\n";
+          errs() << inst << "\t\t\t" << operand2Value << " = " << operand2Value << "\n";
         }
         if (inst.isBinaryOp())
         {
@@ -183,14 +183,28 @@ namespace
           // errs() << "Operand(0)" << (*inst.getOperand(0))<<"\n";
           string resultString = "";
           auto *ptr = dyn_cast<User>(&inst);
-          // errs() << "\t" << *ptr << "\n";
+          // errs() << "\t\t\t" << *ptr << "\n";
           int i = 0;
           for (auto it = ptr->op_begin(); it != ptr->op_end(); ++it)
           {
+
             Value *v = dyn_cast<Value>(it);
             stringstream ss;
             ss << v;
             string value = ss.str();
+            
+            if (llvm::ConstantInt *constInteger = dyn_cast<llvm::ConstantInt>(v))
+            {
+              // if operand is a constant integer than the operand is overwritten here by the integer value
+              // errs() << "Found constInt with " << operand2 << ": " << operand1 << constInteger << "\n";
+              if (constInteger->getBitWidth() <= 32)
+              {
+                int constIntegerVal = constInteger->getSExtValue();
+                value = to_string(constIntegerVal);
+                // errs() << "Found constInt with " << operand2 << ": str " << operand1 << " int " << constIntegerVal << "\n";
+              }
+            }
+
             auto valueKey = hashTable.find(value);
             int result = 0;
 
@@ -213,7 +227,7 @@ namespace
               resultString += to_string(result);
             }
             i++;
-            // errs() << "\t" << *(*it) << "\n";
+            // errs() << "\t\t\t" << *(*it) << "\n";
             // errs() << dyn_cast<Value>(it) << "\n";
             // if ((*it)->hasName())
             // errs() << (*it)->getName() << "\n";
@@ -221,6 +235,7 @@ namespace
 
           auto resultStringKey = hashTable.find(resultString);
           int resultStringNum;
+          string redundant = "";
           if (resultStringKey == hashTable.end())
           {
             count++;
@@ -230,6 +245,7 @@ namespace
           else
           {
             resultStringNum = resultStringKey->second;
+            redundant = " (redundant)";
           }
 
           Value *v = &inst;
@@ -246,7 +262,7 @@ namespace
           hashTable.insert(make_pair(value, resultStringNum));
 
           // result print
-          errs() << inst << "\t" << resultStringNum << " = " << resultString << "\n";
+          errs() << inst << "\t\t\t\t\t\t" << resultStringNum << " = " << resultString << redundant << "\n";
           // errs() << value << ":: " << resultStringNum << "\n";
 
           // auto *ptr2 = dyn_cast<User>(&inst);
