@@ -3,6 +3,7 @@
 #include "llvm/Passes/PassBuilder.h"
 #include "llvm/IR/PassManager.h"
 #include "llvm/Support/raw_ostream.h"
+#include "llvm/Support/FormatVariadic.h"
 #include <iostream>
 #include <unordered_map>
 #include <string>
@@ -38,14 +39,11 @@ namespace
     // Comment this line
     // if (F.getName() != func_name) return;
 
-    // errs() << "Testing 1...." << "\n";
-
     for (auto &basic_block : F)
     {
       unordered_map<string, int> hashTable;
       for (auto &inst : basic_block)
       {
-        // errs() << inst << "\n";
         if (inst.getOpcode() == Instruction::Load)
         {
           // errs() << "This is Load"
@@ -82,9 +80,8 @@ namespace
             hashTable.erase(resultKey);
           }
           hashTable.insert(make_pair(value, resultNum));
-          // errs() << "value: " << value << "\n";
           // result print
-          errs() << inst << "\t\t\t" << resultNum << " = " << resultNum << "\n";
+          errs() << formatv("{0, -50}", inst) << resultNum << " = " << resultNum << "\n";
         }
         if (inst.getOpcode() == Instruction::Store)
         {
@@ -100,16 +97,13 @@ namespace
           if (llvm::ConstantInt *constInteger = dyn_cast<llvm::ConstantInt>(checkVal))
           {
             // if operand1 is a constant integer than the operand1 is overwritten here by the integer value
-            // errs() << "Found constInt with " << operand2 << ": " << operand1 << constInteger << "\n";
             if (constInteger->getBitWidth() <= 32)
             {
               int constIntegerVal = constInteger->getSExtValue();
               operand1 = to_string(constIntegerVal);
-              // errs() << "Found constInt with " << operand2 << ": str " << operand1 << " int " << constIntegerVal << "\n";
             }
           }
 
-          // errs() << "value: " << operand1 << "::" << inst.getOperand(0) << "\n";
           auto key1 = hashTable.find(operand1);
           int operand2Value = 0;
           if (key1 == hashTable.end())
@@ -143,11 +137,10 @@ namespace
           hashTable.insert(make_pair(operand2, operand2Value));
 
           // print the instruction with hash table value
-          errs() << inst << "\t\t\t" << operand2Value << " = " << operand2Value << "\n";
+          errs() << formatv("{0, -50}", inst) << operand2Value << " = " << operand2Value << "\n";
         }
         if (inst.isBinaryOp())
         {
-          // errs() << "Op Code:" << inst.getOpcodeName() << "\n";
           if (inst.getOpcode() == Instruction::Add)
           {
             // errs() << "This is Addition"
@@ -179,11 +172,9 @@ namespace
             //        << "\n";
           }
 
-          // see other classes, Instruction::Sub, Instruction::UDiv, Instruction::SDiv
-          // errs() << "Operand(0)" << (*inst.getOperand(0))<<"\n";
           string resultString = "";
           auto *ptr = dyn_cast<User>(&inst);
-          // errs() << "\t\t\t" << *ptr << "\n";
+
           int i = 0;
           for (auto it = ptr->op_begin(); it != ptr->op_end(); ++it)
           {
@@ -196,12 +187,10 @@ namespace
             if (llvm::ConstantInt *constInteger = dyn_cast<llvm::ConstantInt>(v))
             {
               // if operand is a constant integer than the operand is overwritten here by the integer value
-              // errs() << "Found constInt with " << operand2 << ": " << operand1 << constInteger << "\n";
               if (constInteger->getBitWidth() <= 32)
               {
                 int constIntegerVal = constInteger->getSExtValue();
                 value = to_string(constIntegerVal);
-                // errs() << "Found constInt with " << operand2 << ": str " << operand1 << " int " << constIntegerVal << "\n";
               }
             }
 
@@ -227,10 +216,6 @@ namespace
               resultString += to_string(result);
             }
             i++;
-            // errs() << "\t\t\t" << *(*it) << "\n";
-            // errs() << dyn_cast<Value>(it) << "\n";
-            // if ((*it)->hasName())
-            // errs() << (*it)->getName() << "\n";
           }
 
           auto resultStringKey = hashTable.find(resultString);
@@ -262,25 +247,9 @@ namespace
           hashTable.insert(make_pair(value, resultStringNum));
 
           // result print
-          errs() << inst << "\t\t\t\t\t\t" << resultStringNum << " = " << resultString << redundant << "\n";
-          // errs() << value << ":: " << resultStringNum << "\n";
-
-          // auto *ptr2 = dyn_cast<User>(&inst);
-          // for (auto it = ptr->op_begin(); it != ptr->op_end(); ++it)
-          // {
-          //   llvm::User *instr = dyn_cast<User>(it);
-          //   errs() << "custom"
-          //          << "\n";
-
-          //   for (int i = 0; i < instr->getNumOperands(); i++)
-          //   {
-          //     errs() << i << ": " << instr->getOperand(i)->getName() << ",";
-          //   }
-          //   errs() << "\n";
-          // }
+          errs() << formatv("{0, -50}", inst) <<  resultStringNum << " = " << resultString << redundant << "\n";
         } // end if
       }   // end for inst
-      printHashTable(hashTable);
     } // end for block
   }
 
