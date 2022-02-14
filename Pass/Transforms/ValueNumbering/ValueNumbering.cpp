@@ -50,7 +50,6 @@ namespace
           //        << "\n";
 
           string operand1 = inst.getOperand(0)->getName().str();
-          // errs() << operand1 << "\n";
 
           int resultNum;
 
@@ -66,10 +65,10 @@ namespace
             resultNum = key1->second;
           }
 
-          // we can't get the result of an instruction
-          // but we can get the address of the result in load instruction
-          // and it remains same, so we are keepin the value of the load instruction result
-          // in the hash table. The value address is changed to string
+          // We can't get the result variable name of an instruction.
+          // However, we can get the address of the register that stores the result (llvm::Value address) in load instruction
+          // and it remains the same, so we are keeping the value address of the load instruction result
+          // in the hash table. The value address is changed to string.
           Value *v = &inst;
           stringstream ss;
           ss << v;
@@ -85,8 +84,6 @@ namespace
         }
         if (inst.getOpcode() == Instruction::Store)
         {
-          // errs() << "This is Store:"
-          //        << "\n";
           // find operand 1 and 2 from the store instruction
           // insert the operand2 in hashTable if it's not available
           // if available get the value
@@ -104,11 +101,14 @@ namespace
             }
           }
 
+          // if operand1 is in the hash table, get the value numbering
+          // else assign a new value numbering to operand1 and insert it into the hash table
           auto key1 = hashTable.find(operand1);
           int operand2Value = 0;
           if (key1 == hashTable.end())
           {
-            // we check if the value address of the operand1 is present in the hash table
+            // if operand1 is not found in the hash table,
+            // then we check if the value address of the operand1 is present in the hash table
             stringstream ss;
             ss << inst.getOperand(0);
             string value1 = ss.str();
@@ -129,6 +129,9 @@ namespace
             operand2Value = key1->second;
           }
 
+          // if operand2 exits in the hashTable, erase it first
+          // then overwrite it with new value numbering
+          // else, just insert value numbering for operand2 in the hash table
           auto key2 = hashTable.find(operand2);
           if (key2 != hashTable.end())
           {
@@ -136,7 +139,7 @@ namespace
           }
           hashTable.insert(make_pair(operand2, operand2Value));
 
-          // print the instruction with hash table value
+          // result print
           errs() << formatv("{0, -50}", inst) << operand2Value << " = " << operand2Value << "\n";
         }
         if (inst.isBinaryOp())
@@ -238,12 +241,10 @@ namespace
           ss << v;
           string value = ss.str();
           auto valueKey = hashTable.find(value);
-
           if (valueKey != hashTable.end())
           {
             hashTable.erase(valueKey);
           }
-
           hashTable.insert(make_pair(value, resultStringNum));
 
           // result print
